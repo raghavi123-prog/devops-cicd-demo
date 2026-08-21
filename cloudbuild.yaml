@@ -1,0 +1,23 @@
+steps:
+
+  # Step 1: Install Python dependencies
+  - name: 'python:3.9'
+    entrypoint: 'pip'
+    args:
+      - 'install'
+      - '-r'
+      - 'requirements.txt'
+
+  # Step 2: Run automated tests
+  - name: 'python:3.9'
+    entrypoint: 'pytest'
+    args:
+      - 'test_app.py'
+
+  # Step 3: Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcp-devops-demo:$COMMIT_SHA'
+      - '.'
