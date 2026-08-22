@@ -1,23 +1,14 @@
-
-
-
-
 steps:
-  # Step 1: Install Python dependencies
-  - name: 'python:3.9'
-    entrypoint: 'pip'
+  # Step 1: Install dependencies and run tests in one environment
+  - name: 'python:3.9-slim'
+    entrypoint: 'bash'
     args:
-      - 'install'
-      - '-r'
-      - 'requirements.txt'
+      - '-c'
+      - |
+        pip install --no-cache-dir -r requirements.txt
+        pytest test_app.py
 
-  # Step 2: Run automated tests
-  - name: 'python:3.9'
-    entrypoint: 'pytest'
-    args:
-      - 'test_app.py'
-
-  # Step 3: Build Docker image
+  # Step 2: Build the Docker image once tests pass
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
