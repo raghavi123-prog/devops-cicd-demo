@@ -1,5 +1,8 @@
-steps:
 
+
+
+
+steps:
   # Step 1: Install Python dependencies
   - name: 'python:3.9'
     entrypoint: 'pip'
@@ -21,3 +24,6 @@ steps:
       - '-t'
       - 'gcp-devops-demo:$COMMIT_SHA'
       - '.'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
