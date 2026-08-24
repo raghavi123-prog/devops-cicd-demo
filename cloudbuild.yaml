@@ -1,5 +1,5 @@
 steps:
-  # Step 1: Install dependencies and run tests in one environment
+  # 1. CI - Install dependencies & run automated unit tests
   - name: 'python:3.9-slim'
     entrypoint: 'bash'
     args:
@@ -8,13 +8,36 @@ steps:
         pip install --no-cache-dir -r requirements.txt
         pytest test_app.py
 
-  # Step 2: Build the Docker image once tests pass
+  # 2. CI - Build Docker container image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
-      - 'gcp-devops-demo:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
       - '.'
+
+  # 3. CD - Push Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
+
+  # 4. CD - Deploy container automatically to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'flask-live-app'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '5000'
 
 options:
   logging: CLOUD_LOGGING_ONLY
