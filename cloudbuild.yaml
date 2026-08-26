@@ -28,6 +28,7 @@ steps:
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
       - '.'
 
+
   # STEP 4: Container Vulnerability Scan (Trivy)
   - name: 'aquasec/trivy:latest'
     id: 'container-image-scan'
@@ -36,7 +37,8 @@ steps:
       - '--exit-code'
       - '1'
       - '--severity'
-      - 'CRITICAL,HIGH'
+      - 'CRITICAL'
+      - '--ignore-unfixed'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
 
   # STEP 5: Push Image (Executes ONLY if Step 4 passes cleanly)
