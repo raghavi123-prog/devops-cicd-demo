@@ -1,6 +1,7 @@
 steps:
-  # 1. CI - Install dependencies & run automated unit tests
+  # STEP 1: Unit Testing Gate
   - name: 'python:3.9-slim'
+    id: 'unit-tests'
     entrypoint: 'bash'
     args:
       - '-c'
@@ -8,22 +9,46 @@ steps:
         pip install --no-cache-dir -r requirements.txt
         pytest test_app.py
 
-  # 2. CI - Build Docker container image
+  # STEP 2: Static Code Security Scan (SAST with Bandit)
+  - name: 'python:3.9-slim'
+    id: 'sast-code-scan'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install --no-cache-dir bandit
+        bandit -r app.py -lll
+
+  # STEP 3: Build Docker Image
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-docker-image'
     args:
       - 'build'
       - '-t'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
       - '.'
 
-  # 3. CD - Push Docker image to Artifact Registry
+  # STEP 4: Container Vulnerability Scan (Trivy)
+  - name: 'aquasec/trivy:latest'
+    id: 'container-image-scan'
+    args:
+      - 'image'
+      - '--exit-code'
+      - '1'
+      - '--severity'
+      - 'CRITICAL,HIGH'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
+
+  # STEP 5: Push Image (Executes ONLY if Step 4 passes cleanly)
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-to-registry'
     args:
       - 'push'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
 
-  # 4. CD - Deploy container automatically to Cloud Run
+  # STEP 6: Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-cloud-run'
     entrypoint: 'gcloud'
     args:
       - 'run'
@@ -36,8 +61,6 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-      - '--port'
-      - '5000'
 
 options:
   logging: CLOUD_LOGGING_ONLY
