@@ -1,0 +1,28 @@
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: flask-app-pipeline
+description: Multi-target delivery pipeline for Flask App
+serialPipeline:
+  stages:
+  - targetId: dev-target
+    profiles: []
+  - targetId: uat-target
+    profiles: []
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: dev-target
+description: Development environment
+run:
+  location: projects/project-c6caeb96-abbd-4e9c-bfa/locations/us-central1
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: uat-target
+description: User Acceptance Testing environment (Requires Approval)
+requireApproval: true
+run:
+  location: projects/project-c6caeb96-abbd-4e9c-bfa/locations/us-central1
