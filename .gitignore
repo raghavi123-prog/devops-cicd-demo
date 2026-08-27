@@ -1,12 +1,4 @@
-# Terraform internal files
-.terraform/
-*.tfstate
-*.tfstate.*
-crash.log
-
-# Python cache & virtual environments
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
 venv/
-.pytest_cache/
+.env
