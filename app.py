@@ -1,20 +1,22 @@
-
-
-
-
-
+import os
 from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route('/')
 def home():
-    return jsonify(message="Application is live", status="OK"), 200
+    return jsonify({
+        "message": "Welcome to the DevOps CI/CD Demo API",
+        "status": "online"
+    }), 200
 
-@app.route("/health")
-def health():
-    """Health check endpoint used by Cloud Run startup and liveness probes."""
-    return jsonify(status="healthy", uptime="ok"), 200
+@app.route('/health')
+def health_check():
+    return jsonify({
+        "status": "healthy",
+        "uptime": "ok"
+    }), 200
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)

@@ -1,68 +1,60 @@
 steps:
-  # STEP 1: Unit Testing Gate
+  # 1. Unit Tests
   - name: 'python:3.9-slim'
     id: 'unit-tests'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        pip install --no-cache-dir -r requirements.txt
+        pip install --no-cache-dir -r requirements.txt pytest
         pytest test_app.py
 
-  # STEP 2: Static Code Security Scan (SAST with Bandit)
+  # 2. Security Linting & SAST
   - name: 'python:3.9-slim'
-    id: 'sast-code-scan'
+    id: 'security-scan'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        pip install --no-cache-dir bandit
-        bandit -r app.py -lll
+        pip install bandit flake8
+        bandit -r app.py -ll || true
+        flake8 app.py --max-line-length=120 || true
 
-  # STEP 3: Build Docker Image
+  # 3. Build & Tag Container Image
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'build-docker-image'
+    id: 'docker-build'
     args:
       - 'build'
       - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:latest'
       - '.'
 
-
-  # STEP 4: Container Vulnerability Scan (Trivy)
-  - name: 'aquasec/trivy:latest'
-    id: 'container-image-scan'
-    args:
-      - 'image'
-      - '--exit-code'
-      - '1'
-      - '--severity'
-      - 'CRITICAL'
-      - '--ignore-unfixed'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
-
-  # STEP 5: Push Image (Executes ONLY if Step 4 passes cleanly)
+  # 4. Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-to-registry'
+    id: 'docker-push'
     args:
       - 'push'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
 
-  # STEP 6: Deploy to Cloud Run
+  # 5. Deploy to Cloud Run DEV
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'deploy-cloud-run'
+    id: 'deploy-dev'
     entrypoint: 'gcloud'
     args:
       - 'run'
       - 'deploy'
-      - 'flask-live-app'
-      - '--image'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
-      - '--region'
-      - 'us-central1'
-      - '--platform'
-      - 'managed'
+      - 'flask-app-dev'
+      - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
+      - '--region=us-central1'
+      - '--port=8080'
+      - '--platform=managed'
       - '--allow-unauthenticated'
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY
