@@ -1,5 +1,5 @@
 steps:
-  # 1. Unit Tests
+  # 1. Run Unit Tests
   - name: 'python:3.9-slim'
     id: 'unit-tests'
     entrypoint: 'bash'
@@ -20,7 +20,7 @@ steps:
         bandit -r app.py -ll || true
         flake8 app.py --max-line-length=120 || true
 
-  # 3. Build & Tag Container Image
+  # 3. Build Container Image
   - name: 'gcr.io/cloud-builders/docker'
     id: 'docker-build'
     args:
@@ -31,14 +31,14 @@ steps:
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:latest'
       - '.'
 
-  # 4. Push to Artifact Registry
+  # 4. Push Image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     id: 'docker-push'
     args:
       - 'push'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
 
-  # 5. Deploy to Cloud Run DEV
+  # 5. Deploy directly to DEV Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-dev'
     entrypoint: 'gcloud'
@@ -51,6 +51,7 @@ steps:
       - '--port=8080'
       - '--platform=managed'
       - '--allow-unauthenticated'
+      - '--quiet'
 
 images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
