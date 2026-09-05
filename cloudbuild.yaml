@@ -60,7 +60,7 @@ steps:
       - |
         cd terraform
         terraform init
-        terraform apply -auto-approve
+        terraform apply -lock=false -auto-approve
 
 
 timeout: '1200s'
