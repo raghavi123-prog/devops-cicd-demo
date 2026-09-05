@@ -52,6 +52,18 @@ steps:
       - '--platform=managed'
       - '--allow-unauthenticated'
       - '--quiet'
+   # Step 6: Terraform Automate
+  - name: 'hashicorp/terraform:latest'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd terraform
+        terraform init
+        terraform apply -auto-approve
+
+
+timeout: '600s'
 
 images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
