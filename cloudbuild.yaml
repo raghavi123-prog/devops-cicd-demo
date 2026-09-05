@@ -63,7 +63,7 @@ steps:
         terraform apply -auto-approve
 
 
-timeout: '600s'
+timeout: '1200s'
 
 images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
