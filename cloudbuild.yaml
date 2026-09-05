@@ -52,18 +52,24 @@ steps:
       - '--platform=managed'
       - '--allow-unauthenticated'
       - '--quiet'
-   # Step 6: Terraform Automate
+  
+  # Step: Provision Infrastructure, then Immediately Clean Up
   - name: 'hashicorp/terraform:latest'
     entrypoint: 'sh'
+    timeout: '1200s'
     args:
       - '-c'
       - |
         cd terraform
         terraform init
+        echo "=== CREATING RESOURCES ==="
         terraform apply -lock=false -auto-approve
-
+        echo "=== VERIFYING CREATION COMPLETE ==="
+        echo "=== DESTROYING RESOURCES NOW ==="
+        terraform destroy -lock=false -auto-approve
 
 timeout: '1200s'
+
 
 images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
