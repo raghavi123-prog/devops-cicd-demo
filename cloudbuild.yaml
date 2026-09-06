@@ -56,7 +56,7 @@ steps:
   # Step: Provision Infrastructure, then Immediately Clean Up
   - name: 'hashicorp/terraform:latest'
     entrypoint: 'sh'
-    timeout: '1200s'
+    timeout: '1800s'
     args:
       - '-c'
       - |
@@ -68,7 +68,7 @@ steps:
         echo "=== DESTROYING RESOURCES NOW ==="
         terraform destroy -lock=false -auto-approve
 
-timeout: '1200s'
+timeout: '1800s'
 
 
 images:
