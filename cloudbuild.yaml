@@ -5,7 +5,7 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/dev-docker-repo/flask-app:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
       - '.'
 
   # 2. Scan the Image for Vulnerabilities using Trivy
@@ -17,14 +17,14 @@ steps:
       - 'CRITICAL'
       - '--exit-code'
       - '0'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/dev-docker-repo/flask-app:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
 
   # 3. Push the Immutable Image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-image'
     args:
       - 'push'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/dev-docker-repo/flask-app:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
 
   # 4. Deploy Infrastructure to DEV using Terraform
   - name: 'hashicorp/terraform:latest'
@@ -45,7 +45,7 @@ steps:
         terraform destroy -var="project_id=$PROJECT_ID" -lock=false -auto-approve
 
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/dev-docker-repo/flask-app:$COMMIT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
 
 options:
   logging: CLOUD_LOGGING_ONLY
