@@ -42,21 +42,21 @@ steps:
         terraform apply -var="project_id=$PROJECT_ID" -lock=false -auto-approve
 
         echo "=== RETRIEVING SERVICE URI ==="
-        SERVICE_URI=$(terraform output -raw cloud_run_uri 2>/dev/null || echo "")
+        SERVICE_URI=$$(terraform output -raw cloud_run_uri 2>/dev/null || echo "")
 
-        if [ -n "$SERVICE_URI" ]; then
-          echo "Testing endpoint: $SERVICE_URI/health"
+        if [ -n "$$SERVICE_URI" ]; then
+          echo "Testing endpoint: $$SERVICE_URI/health"
           for i in 1 2 3 4 5 6; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URI/health" || true)
-            echo "Attempt $i: Received HTTP status $STATUS"
-            if [ "$STATUS" = "200" ]; then
+            STATUS=$$(curl -s -o /dev/null -w "%{http_code}" "$$SERVICE_URI/health" || true)
+            echo "Attempt $$i: Received HTTP status $$STATUS"
+            if [ "$$STATUS" = "200" ]; then
               echo "=== SMOKE TEST PASSED: Service returned 200 OK ==="
               break
             fi
             sleep 5
           done
 
-          if [ "$STATUS" != "200" ]; then
+          if [ "$$STATUS" != "200" ]; then
             echo "=== SMOKE TEST FAILED: Service did not return 200 OK ==="
             exit 1
           fi
