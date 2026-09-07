@@ -1,0 +1,35 @@
+name: "PR Quality & Validation Gates"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-terraform:
+    name: "Validate Terraform Configurations"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform CLI
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
+
+      - name: Check Code Formatting
+        run: terraform fmt -check -recursive
+
+      - name: Validate Dev Environment
+        run: |
+          cd terraform/environments/dev
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate UAT Environment
+        run: |
+          cd terraform/environments/uat
+          terraform init -backend=false
+          terraform validate
