@@ -1,5 +1,5 @@
 steps:
-  # 1. Build the Flask Container Image tagged with the Commit SHA
+  # 1. Build the Flask Container Image tagged with Commit SHA
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-flask-image'
     args:
@@ -26,9 +26,9 @@ steps:
       - 'push'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$COMMIT_SHA'
 
-  # 4. Deploy Infrastructure to DEV using Terraform
+  # 4. Deploy Infrastructure & Run Automated Smoke Test
   - name: 'hashicorp/terraform:latest'
-    id: 'terraform-dev'
+    id: 'terraform-dev-and-test'
     entrypoint: 'sh'
     timeout: '1200s'
     args:
@@ -37,10 +37,34 @@ steps:
         cd terraform/environments/dev
         echo "=== INITIALIZING TERRAFORM DEV ==="
         terraform init
+
         echo "=== APPLYING DEV INFRASTRUCTURE ==="
         terraform apply -var="project_id=$PROJECT_ID" -lock=false -auto-approve
-        echo "=== DISPLAYING DEV OUTPUTS ==="
-        terraform output
+
+        echo "=== RETRIEVING SERVICE URI ==="
+        SERVICE_URI=$(terraform output -raw cloud_run_uri 2>/dev/null || echo "")
+
+        if [ -n "$SERVICE_URI" ]; then
+          echo "Testing endpoint: $SERVICE_URI/health"
+          for i in 1 2 3 4 5 6; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URI/health" || true)
+            echo "Attempt $i: Received HTTP status $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "=== SMOKE TEST PASSED: Service returned 200 OK ==="
+              break
+            fi
+            sleep 5
+          done
+
+          if [ "$STATUS" != "200" ]; then
+            echo "=== SMOKE TEST FAILED: Service did not return 200 OK ==="
+            exit 1
+          fi
+        else
+          echo "ERROR: cloud_run_uri output is empty or not found!"
+          exit 1
+        fi
+
         echo "=== TEARING DOWN DEV INFRASTRUCTURE ==="
         terraform destroy -var="project_id=$PROJECT_ID" -lock=false -auto-approve
 
