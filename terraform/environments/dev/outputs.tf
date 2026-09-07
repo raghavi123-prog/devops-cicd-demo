@@ -17,3 +17,13 @@ output "dev_monitoring_channel_id" {
   value       = module.monitoring.channel_id
   description = "Dev Monitoring Channel ID"
 }
+
+output "dev_vm_name" {
+  value       = module.compute_vm.vm_name
+  description = "Dev Compute VM Name"
+}
+
+output "dev_database_connection_name" {
+  value       = module.cloud_sql.connection_name
+  description = "Dev Cloud SQL Instance Connection Name"
+}

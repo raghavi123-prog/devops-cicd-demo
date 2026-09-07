@@ -46,3 +46,19 @@ module "monitoring" {
   channel_name       = "Dev Environment Alert Channel"
   notification_email = "admin@example.com"
 }
+
+# 5. Compute VM Module
+module "compute_vm" {
+  source        = "../../modules/compute-vm"
+  project_id    = var.project_id
+  region        = var.region
+  instance_name = "${var.environment}-vm-instance"
+}
+
+# 6. Cloud SQL Module
+module "cloud_sql" {
+  source        = "../../modules/cloud-sql"
+  project_id    = var.project_id
+  region        = var.region
+  instance_name = "${var.environment}-db-${var.project_id}"
+}
