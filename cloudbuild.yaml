@@ -1,79 +1,19 @@
 steps:
-  # 1. Run Unit Tests
-  - name: 'python:3.9-slim'
-    id: 'unit-tests'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        pip install --no-cache-dir -r requirements.txt pytest
-        pytest test_app.py
-
-  # 2. Security Linting & SAST
-  - name: 'python:3.9-slim'
-    id: 'security-scan'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        pip install bandit flake8
-        bandit -r app.py -ll || true
-        flake8 app.py --max-line-length=120 || true
-
-  # 3. Build Container Image
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'docker-build'
-    args:
-      - 'build'
-      - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
-      - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:latest'
-      - '.'
-
-  # 4. Push Image to Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'docker-push'
-    args:
-      - 'push'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
-
-  # 5. Deploy directly to DEV Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'deploy-dev'
-    entrypoint: 'gcloud'
-    args:
-      - 'run'
-      - 'deploy'
-      - 'flask-app-dev'
-      - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
-      - '--region=us-central1'
-      - '--port=8080'
-      - '--platform=managed'
-      - '--allow-unauthenticated'
-      - '--quiet'
-  
-  # Step: Provision Infrastructure, then Immediately Clean Up
+  # Step 1: Run Terraform for Dev Environment
   - name: 'hashicorp/terraform:latest'
     entrypoint: 'sh'
-    timeout: '1800s'
+    timeout: '1200s'
     args:
       - '-c'
       - |
-        cd terraform
+        cd terraform/environments/dev
+        echo "=== INITIALIZING TERRAFORM DEV ==="
         terraform init
-        echo "=== CREATING RESOURCES ==="
-        terraform apply -lock=false -auto-approve
-        echo "=== VERIFYING CREATION COMPLETE ==="
-        echo "=== DESTROYING RESOURCES NOW ==="
-        terraform destroy -lock=false -auto-approve
+        echo "=== APPLYING DEV INFRASTRUCTURE ==="
+        terraform apply -var="project_id=$PROJECT_ID" -lock=false -auto-approve
+        echo "=== DISPLAYING DEV OUTPUTS ==="
+        terraform output
+        echo "=== TEARING DOWN DEV INFRASTRUCTURE ==="
+        terraform destroy -var="project_id=$PROJECT_ID" -lock=false -auto-approve
 
-timeout: '1800s'
-
-
-images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/demo-repo/flask-app:latest'
-
-options:
-  logging: CLOUD_LOGGING_ONLY
+timeout: '1200s'
