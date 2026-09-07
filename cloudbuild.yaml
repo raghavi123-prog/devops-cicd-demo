@@ -16,4 +16,7 @@ steps:
         echo "=== TEARING DOWN DEV INFRASTRUCTURE ==="
         terraform destroy -var="project_id=$PROJECT_ID" -lock=false -auto-approve
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 timeout: '1200s'
