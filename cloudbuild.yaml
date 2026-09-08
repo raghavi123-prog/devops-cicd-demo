@@ -42,7 +42,7 @@ steps:
         terraform apply -var="project_id=$PROJECT_ID" -lock=false -auto-approve
 
         echo "=== RETRIEVING SERVICE URI ==="
-        SERVICE_URI=$$(terraform output -raw cloud_run_uri 2>/dev/null || echo "")
+        SERVICE_URI=$$(terraform output -raw dev_cloud_run_uri 2>/dev/null || echo "")
 
         if [ -n "$$SERVICE_URI" ]; then
           echo "Testing endpoint: $$SERVICE_URI/health"
@@ -61,7 +61,7 @@ steps:
             exit 1
           fi
         else
-          echo "ERROR: cloud_run_uri output is empty or not found!"
+          echo "ERROR: dev_cloud_run_uri output is empty or not found!"
           exit 1
         fi
 
