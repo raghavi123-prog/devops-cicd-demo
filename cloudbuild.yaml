@@ -34,15 +34,16 @@ steps:
     args:
       - '-c'
       - |
+        set -e
         cd terraform/environments/dev
         echo "=== INITIALIZING TERRAFORM DEV ==="
         terraform init
 
-        echo "=== APPLYING DEV INFRASTRUCTURE ==="
-        terraform apply -var="project_id=$PROJECT_ID" -lock=false -auto-approve
-
         echo "=== INSTALLING CURL ==="
         apk add --no-cache curl
+
+        echo "=== APPLYING DEV INFRASTRUCTURE ==="
+        terraform apply -var="project_id=$PROJECT_ID" -lock=false -auto-approve
 
         echo "=== RETRIEVING SERVICE URI ==="
         SERVICE_URI=$$(terraform output -raw dev_cloud_run_uri 2>/dev/null || echo "")
@@ -61,10 +62,12 @@ steps:
 
           if [ "$$STATUS" != "200" ]; then
             echo "=== SMOKE TEST FAILED: Service did not return 200 OK ==="
+            terraform destroy -var="project_id=$PROJECT_ID" -lock=false -auto-approve
             exit 1
           fi
         else
           echo "ERROR: dev_cloud_run_uri output is empty or not found!"
+          terraform destroy -var="project_id=$PROJECT_ID" -lock=false -auto-approve
           exit 1
         fi
 
