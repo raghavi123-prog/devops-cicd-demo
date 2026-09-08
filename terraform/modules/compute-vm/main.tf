@@ -1,8 +1,11 @@
+resource "random_id" "vm_suffix" {
+  byte_length = 3
+}
+
 resource "google_compute_instance" "my_vm" {
-  project      = var.project_id
-  name         = var.instance_name
-  machine_type = var.machine_type
-  zone         = "${var.region}-a"
+  name         = "dev-vm-${random_id.vm_suffix.hex}"
+  machine_type = "e2-micro"
+  zone         = "us-central1-a"
 
   boot_disk {
     initialize_params {
