@@ -41,6 +41,9 @@ steps:
         echo "=== APPLYING DEV INFRASTRUCTURE ==="
         terraform apply -var="project_id=$PROJECT_ID" -lock=false -auto-approve
 
+        echo "=== INSTALLING CURL ==="
+        apk add --no-cache curl
+
         echo "=== RETRIEVING SERVICE URI ==="
         SERVICE_URI=$$(terraform output -raw dev_cloud_run_uri 2>/dev/null || echo "")
 
