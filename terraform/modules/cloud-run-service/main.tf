@@ -17,9 +17,10 @@ resource "google_cloud_run_v2_service" "run" {
   }
 }
 
-resource "google_cloud_run_service_iam_member" "public_access" {
+resource "google_cloud_run_v2_service_iam_member" "public_access" {
+  project  = google_cloud_run_v2_service.run.project
   location = google_cloud_run_v2_service.run.location
-  service  = google_cloud_run_v2_service.run.name
+  name     = google_cloud_run_v2_service.run.name
   role     = "roles/run.invoker"
   member   = "allUsers"
 }
