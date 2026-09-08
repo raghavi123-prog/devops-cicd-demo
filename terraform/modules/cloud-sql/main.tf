@@ -1,11 +1,17 @@
+resource "random_id" "db_suffix" {
+  byte_length = 4
+}
+
 resource "google_sql_database_instance" "my_db" {
-  project             = var.project_id
-  name                = var.instance_name
-  database_version    = var.database_version
-  region              = var.region
+  name             = "dev-db-${var.project_id}-${random_id.db_suffix.hex}"
+  database_version = "POSTGRES_15"
+  region           = var.region
   deletion_protection = false
 
   settings {
-    tier = var.tier
+    tier = "db-f1-micro"
+    ip_configuration {
+      ipv4_enabled = true
+    }
   }
 }
