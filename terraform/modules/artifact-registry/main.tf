@@ -1,7 +1,14 @@
+resource "random_id" "repo_suffix" {
+  byte_length = 3
+}
+
 resource "google_artifact_registry_repository" "repo" {
-  project       = var.project_id
   location      = var.region
-  repository_id = var.repository_id
+  repository_id = "dev-repo-${random_id.repo_suffix.hex}"
+  description   = "Docker repository managed by Terraform"
   format        = "DOCKER"
-  description   = "Docker container repository managed by Terraform"
+}
+
+output "repository_id" {
+  value = google_artifact_registry_repository.repo.id
 }

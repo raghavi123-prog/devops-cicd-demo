@@ -1,5 +1,12 @@
+resource "random_id" "sa_suffix" {
+  byte_length = 3
+}
+
 resource "google_service_account" "sa" {
-  project      = var.project_id
-  account_id   = var.account_id
-  display_name = var.display_name
+  account_id   = "dev-app-sa-${random_id.sa_suffix.hex}"
+  display_name = "Dev Application Service Account"
+}
+
+output "email" {
+  value = google_service_account.sa.email
 }
